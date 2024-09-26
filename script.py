@@ -37,7 +37,35 @@ def build_index(documents):
     print("Inverted index created")  # debugging
     return inverted_index
 
-# Test the function
 inverted_index = build_index(documents)
 print(inverted_index)  
+
+
+def compute_tf_idf(inverted_index, document_lengths, N, query):
+    query_terms = query.lower().split()
+    query_term_freqs = defaultdict(int)
+
+    for term in query_terms:
+        query_term_freqs[term] += 1
+
+    scores = defaultdict(float)
+    query_length = 0.0
+
+    for term, qtf in query_term_freqs.items():
+        if term in inverted_index:
+            df = len(inverted_index[term])
+            idf = math.log(N / df)
+            query_tf_idf = (1 + math.log(qtf)) * idf
+            query_length += query_tf_idf ** 2
+
+            for doc_id, tf in inverted_index[term]:
+                doc_tf_idf = (1 + math.log(tf))
+                scores[doc_id] += query_tf_idf * doc_tf_idf
+
+    query_length = math.sqrt(query_length)
+    for doc_id in scores:
+        scores[doc_id] /= (document_lengths[doc_id] * query_length)
+
+    return scores
+
 
